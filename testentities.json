@@ -1,0 +1,365 @@
+{ "player" :
+{
+    "name" : "player",
+    "transform" :
+    {
+        "position" :
+        {
+            "x" : 64,
+            "y" : 64
+        }
+    },
+    "components" :
+    [
+        {
+            "type" : "render",
+            "data" :
+            {
+                "texture_file" : "balls.png",
+                "offsetx" : 0,
+                "offsety" : 0,
+                "width" : 32,
+                "height" : 32
+            }
+        },
+        {
+            "type" : "physics",
+            "data" : 
+            {
+                "immovable" : false,
+                "collisionBitmask" : 1022,
+                "collider" :
+                {
+                    "type" : 0,
+                    "center" :
+                    {
+                        "x" : 16,
+                        "y" : 16
+                    },
+                    "radius" : 16
+                }
+            }
+        },
+        {
+            "type" : "health",
+            "data" :
+            {
+                "health" : 100,
+                "healthBitmask" : 1022,
+                "damageCD" : 1
+            }
+        },
+        {
+            "type" : "damageDealer",
+            "data" :
+            {
+                "damage" : 2,
+                "damageBitmask" : 1
+            }
+        },
+        {
+            "type" : "spawner",
+            "data" :
+            {
+                "offset" :
+                {
+                    "x" : 32,
+                    "y" : 8
+                },
+                "area" :
+                {
+                    "x" : 10,
+                    "y" : 10
+                },
+                "spawnCD" : 0.5,
+                "entitiesToSpawn" :
+                [
+                    {
+                        "name" : "playerProjectile",
+                        "transform" :
+                        {
+                            "position" :
+                            {
+                                "x" : 0,
+                                "y" : 0
+                            }
+                        },
+                        "components" :
+                        [
+                            {
+                                "type" : "render",
+                                "data" : 
+                                {
+                                    "texture_file" : "projectiles.png",
+                                    "offsetx" : 16,
+                                    "offsety" : 0,
+                                    "width" : 16,
+                                    "height" : 16
+                                }
+                            },
+                            {
+                                "type" : "damageDealer",
+                                "data" :
+                                {
+                                    "damage" : 10,
+                                    "damageBitmask" : 1
+                                }
+                            },
+                            {
+                                "type" : "health",
+                                "data" :
+                                {
+                                    "health" : 1,
+                                    "healthBitmask" : 2,
+                                    "damageCD" : 2
+                                }
+                            },
+                            {
+                                "type" : "script",
+                                "data" :
+                                {
+                                    "scriptName" : "autoMove",
+                                    "settings" :
+                                    {
+                                        "speed" :
+                                        {
+                                            "x" : 300,
+                                            "y" : 0
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "type" : "physics",
+                                "data" : 
+                                {
+                                    "immovable" : false,
+                                    "collisionBitmask" : 1,
+                                    "collider" :
+                                    {
+                                        "type" : 0,
+                                        "center" :
+                                        {
+                                            "x" : 8,
+                                            "y" : 8
+                                        },
+                                        "radius" : 8
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+},
+"entities" :
+[
+{
+    "name" : "spawner",
+    "transform" :
+    {
+        "position" :
+        {
+            "x" : 1000,
+            "y" : 384
+        }
+    },
+    "components" :
+    [
+        {
+            "type" : "spawner",
+            "data" :
+            {
+                "offset" :
+                {
+                    "x" : 0,
+                    "y" : 0
+                },
+                "area" :
+                {
+                    "x" : 48,
+                    "y" : 760
+                },
+                "spawnCD" : 5,
+                "entitiesToSpawn" :
+                [
+
+{
+    "name" : "enemy1",
+    "transform" :
+    {
+        "position" :
+        {
+            "x" : 0,
+            "y" : 0
+        }
+    },
+    "components" :
+    [
+        {
+            "type" : "render",
+            "data" :
+            {
+                "texture_file" : "balls.png",
+                "offsetx" : 32,
+                "offsety" : 0,
+                "width" : 32,
+                "height" : 32
+            }
+        },
+        {
+            "type" : "physics",
+            "data" : 
+            {
+                "immovable" : true,
+                "collisionBitmask" : 5,
+                "collider" :
+                {
+                    "type" : 0,
+                    "center" :
+                    {
+                        "x" : 16,
+                        "y" : 16
+                    },
+                    "radius" : 16
+                }
+            }
+        },
+        {
+            "type" : "damageDealer",
+            "data" :
+            {
+                "damage" : 20,
+                "damageBitmask" : 2
+            }
+        },
+        {
+            "type" : "health",
+            "data" :
+            {
+                "health" : 20,
+                "healthBitmask" : 1,
+                "damageCD" : 1
+            }
+        },
+        {
+            "type" : "spawner",
+            "data" :
+            {
+                "offset" :
+                {
+                    "x" : -16,
+                    "y" : 12
+                },
+                "area" :
+                {
+                    "x" : 10,
+                    "y" : 10
+                },
+                "spawnCD" : 2.5,
+                "entitiesToSpawn" :
+                [
+                    {
+                        "name" : "enemyProjectile",
+                        "transform" :
+                        {
+                            "position" :
+                            {
+                                "x" : 0,
+                                "y" : 0
+                            }
+                        },
+                        "components" :
+                        [
+                            {
+                                "type" : "render",
+                                "data" : 
+                                {
+                                    "texture_file" : "projectiles.png",
+                                    "offsetx" : 0,
+                                    "offsety" : 0,
+                                    "width" : 16,
+                                    "height" : 16
+                                }
+                            },
+                            {
+                                "type" : "damageDealer",
+                                "data" :
+                                {
+                                    "damage" : 20,
+                                    "damageBitmask" : 2
+                                }
+                            },
+                            {
+                                "type" : "health",
+                                "data" :
+                                {
+                                    "health" : 1,
+                                    "healthBitmask" : 1,
+                                    "damageCD" : 2
+                                }
+                            },
+                            {
+                                "type" : "script",
+                                "data" :
+                                {
+                                    "scriptName" : "autoMove",
+                                    "settings" :
+                                    {
+                                        "speed" :
+                                        {
+                                            "x" : -100,
+                                            "y" : 0
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "type" : "physics",
+                                "data" : 
+                                {
+                                    "immovable" : false,
+                                    "collisionBitmask" : 3,
+                                    "collider" :
+                                    {
+                                        "type" : 0,
+                                        "center" :
+                                        {
+                                            "x" : 8,
+                                            "y" : 8
+                                        },
+                                        "radius" : 8
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type" : "script",
+            "data" :
+            {
+                "scriptName" : "autoMove",
+                "settings" :
+                {
+                    "speed" :
+                    {
+                        "x" : -24,
+                        "y" : 0
+                    }
+                }
+            }
+        }
+        ]
+}
+                ]
+            }
+        }
+    ]
+}
+]
+}

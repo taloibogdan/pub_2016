@@ -1,7 +1,9 @@
-#include <Engine/System/System.h>
 #include <Engine/Rendering/OpenGLRenderer.h>
+#include <fstream>
+#include <Engine/Util/Timer.h>
 #include "System/SystemImpl.h"
-
+#include <Engine/ComponentSystem/ComponentSystem.h>
+#include <Engine/ComponentSystem/ScriptContainer.h>
 namespace Engine
 {
 
@@ -27,21 +29,100 @@ void SystemImpl::Init(SCreationSettings&& cs)
 	glEnable(GL_TEXTURE_2D);
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 	glEnable(GL_NORMALIZE);
-	m_renderer = new Renderer();
-	m_renderer->Init();
-	m_renderer->OnResize(cs.windowWidth, cs.windowHeight);
+	
+	renderer = new Renderer();
+	renderer->Init();
+	renderer->OnResize(cs.windowWidth, cs.windowHeight);
+
+	physicsSimulator = new PhysicsSimulator;
+	componentFactory = new ComponentFactory;
+	scriptContainer = new ScriptContainer;
+	entityManager = new EntityManager(this);
+
+	PhysicsSimulator* ps = physicsSimulator;
+	ScriptContainer* sc = scriptContainer;
+	componentFactory->RegisterComponentType("render", [](Entity* ent, Json::Value obj) {return new RenderComponent(ent, obj); });
+	componentFactory->RegisterComponentType("physics", [ps](Entity* ent, Json::Value obj) {return new PhysicsComponent(ent, ps, obj); });
+	componentFactory->RegisterComponentType("damageDealer", [](Entity* ent, Json::Value obj) {return new DamageDealerComponent(ent, obj); });
+	componentFactory->RegisterComponentType("health", [](Entity* ent, Json::Value obj) {return new HealthComponent(ent, obj); });
+	componentFactory->RegisterComponentType("script", [sc](Entity* ent, Json::Value obj) {return new ScriptComponent(ent, sc, obj); });
+	componentFactory->RegisterComponentType("spawner", [](Entity* ent, Json::Value obj) {return new SpawnerComponent(ent, obj); });
+
+}
+
+void SystemImpl::AddScript(std::string name, std::function<void(Entity*, Json::Value, float)> scr)
+{
+	scriptContainer->AddScript(name, scr);
 }
 
 void SystemImpl::Start()
 {
+	Json::Value entitiesJSON;
+	Json::Reader reader;
+
+	std::ifstream entity_file("../testentities.json", std::ifstream::binary);
+
+	bool parsingSuccessful = reader.parse(entity_file, entitiesJSON, false);
+	if (!parsingSuccessful)
+	{
+		// report to the user the failure and their locations in the document.
+		std::cout << reader.getFormattedErrorMessages() << "\n";
+	}
+
+	Entity* player = new Entity(this, entitiesJSON["player"]);
+	for (auto ent : entitiesJSON["entities"])
+	{
+		entityManager->AddEntity(ent);
+	}
+
 	bool done = false;
-	int posX = 64;
-	int posY = 64;
-	int speed = 3;
+	
+	bool accs[]={ false, false, false, false };
+	float acc = 32;
+	float maxspeed = 256;
+	float friction = 16;
+	Vector2 speed;
+	Timer timer;
+	float dt = 0.033f;
 	while (!done) {
-		m_renderer->BeginFrame();
-		Engine::Texture* tex = Engine::Texture::LoadTexture("../characters.tga");
-		m_renderer->RenderSprite(Sprite(tex, 275,41, 275+16, 41+20), posX, posY);
+		renderer->BeginFrame();
+
+		
+		if (player != nullptr)
+		{
+			if (player->toBeDestroyed)
+			{
+				player->OnEvent(new EntityDestroyedEvent);
+				delete player;
+				player = nullptr;
+				continue;
+			}
+
+			player->Update(dt);
+			entityManager->Update(dt);
+			player->LateUpdate(dt);
+			entityManager->LateUpdate(dt);
+			
+			if (speed.Magnitude() < friction) speed = Vector2();
+			else speed = speed / speed.Magnitude() * (speed.Magnitude() - friction);
+
+			if (accs[0] && accs[1])speed.y = 0;
+			else if (accs[0]) speed.y -= acc;
+			else if (accs[1]) speed.y += acc;
+			if (accs[2] && accs[3])speed.x = 0;
+			else if (accs[2]) speed.x -= acc;
+			else if (accs[3]) speed.x += acc;
+			if (speed.Magnitude() > maxspeed)speed = speed / speed.Magnitude() * maxspeed;
+			player->transform->position = player->transform->position + speed * dt;
+		}
+		else
+		{
+			entityManager->Update(dt);
+			entityManager->LateUpdate(dt);
+		}
+		physicsSimulator->CheckCollisions();
+
+
 		SDL_Event evt;
 		while (SDL_PollEvent(&evt)) {
 			switch (evt.type)
@@ -49,18 +130,27 @@ void SystemImpl::Start()
 			case SDL_KEYDOWN:
 			{
 				if (evt.key.keysym.sym == SDLK_UP)
-					posY -= speed;
+					accs[0] = true;
 				if (evt.key.keysym.sym == SDLK_DOWN)
-					posY += speed;
+					accs[1] = true;
 				if (evt.key.keysym.sym == SDLK_LEFT)
-					posX -= speed;
+					accs[2] = true;
 				if (evt.key.keysym.sym == SDLK_RIGHT)
-					posX += speed;
+					accs[3] = true;
 				break;
 			}
 			case SDL_KEYUP:
 			{
-
+				if (evt.key.keysym.sym == SDLK_UP)
+					accs[0] = false;
+				if (evt.key.keysym.sym == SDLK_DOWN)
+					accs[1] = false;
+				if (evt.key.keysym.sym == SDLK_LEFT)
+					accs[2] = false;
+				if (evt.key.keysym.sym == SDLK_RIGHT)
+					accs[3] = false;
+				if (evt.key.keysym.sym == SDLK_r && player == nullptr)
+					player = new Entity(this, entitiesJSON["player"]);
 				break;
 			}
 			case SDL_WINDOWEVENT:
@@ -70,7 +160,7 @@ void SystemImpl::Start()
 					SDL_Window *window = SDL_GetWindowFromID(evt.window.windowID);
 					int w, h;
 					SDL_GetWindowSize(window, &w, &h);
-					m_renderer->OnResize(w, h);
+					renderer->OnResize(w, h);
 					break;
 				}
 				case SDL_WINDOWEVENT_CLOSE:
@@ -87,11 +177,11 @@ void SystemImpl::Start()
 				break;
 			}
 		}
-		m_renderer->EndFrame();
+		renderer->EndFrame();
 		SDL_GL_MakeCurrent(m_window, m_context);
 		SDL_GL_SwapWindow(m_window);
-
-
+		dt = (float)timer.elapsed();
+		timer.reset();
 	}
 };
 
