@@ -34,6 +34,7 @@ namespace Engine
 		}
 		void Update(float dt);
 		void LateUpdate(float dt);
+		~EntityManager();
 	private:
 		SystemImpl* system;
 		std::vector<Entity*> entities;

@@ -59,7 +59,8 @@ namespace Engine
 		{
 			if (entities[i]->toBeDestroyed)
 			{
-				entities[i]->OnEvent(new EntityDestroyedEvent);
+				EntityDestroyedEvent ev;
+				entities[i]->OnEvent(&ev);
 				delete entities[i];
 				entities[i] = entities[l - 1];
 				entities.pop_back();
@@ -75,5 +76,16 @@ namespace Engine
 	void EntityManager::LateUpdate(float dt)
 	{
 		for (auto ent : entities) { ent->LateUpdate(dt); }
+	}
+	EntityManager::~EntityManager()
+	{
+		int l = std::size(entities);
+		while (!entities.empty()) {
+			EntityDestroyedEvent ev;
+			entities[l - 1]->OnEvent(&ev);
+			delete entities[l - 1];
+			entities.pop_back();
+			l--;
+		}
 	}
 }

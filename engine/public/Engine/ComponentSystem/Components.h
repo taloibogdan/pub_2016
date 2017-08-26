@@ -10,6 +10,7 @@ namespace Engine {
 		virtual void Update(float dt) {}
 		virtual void LateUpdate(float dt) {}
 		virtual void OnEvent(Event* event) = 0;
+		virtual ~IComponent(){}
 	protected:
 		Entity* m_entity;
 	};
@@ -38,7 +39,7 @@ namespace Engine {
 		virtual void LateUpdate(float dt)override;
 		virtual void OnEvent(Event* event);
 
-		~RenderComponent()
+		virtual ~RenderComponent()override
 		{
 			delete sprite;
 			delete texture;

@@ -63,9 +63,10 @@ namespace Engine
 			Vector2 d1 = dif / (-2), d2 = dif / 2;
 			if (isImmovable) { d1 = Vector2(0, 0); d2 = d2 * 2; }
 			else if (other->isImmovable) { d2 = Vector2(0, 0); d1 = d1 * 2; }
-
-			GetEntity()->OnEvent(new CollisionEvent(other->GetEntity(), d1));
-			other->GetEntity()->OnEvent(new CollisionEvent(GetEntity(), d2));
+			CollisionEvent ev1(other->GetEntity(), d1);
+			CollisionEvent ev2(GetEntity(), d2);
+			GetEntity()->OnEvent(&ev1);
+			other->GetEntity()->OnEvent(&ev2);
 		}
 	}
 
@@ -80,7 +81,8 @@ namespace Engine
 		if (event->GetName() == "collision")
 		{
 			CollisionEvent* cEvent = static_cast<CollisionEvent*>(event);
-			cEvent->other->OnEvent(new DamageEvent(damage, damageBitmask));
+			DamageEvent ev(damage, damageBitmask);
+			cEvent->other->OnEvent(&ev);
 		}
 	}
 
@@ -94,18 +96,24 @@ namespace Engine
 				health -= dEvent->damage;
 				std::cout << GetEntity()->name << " damaged! HP: " << (int)health << std::endl;
 				currentDamageCD = damageCD;
-				GetEntity()->OnEvent(new InvulnerabilityEvent(true, 0.1f, 0.1f));
+				InvulnerabilityEvent ev(true, 0.1f, 0.1f);
+				GetEntity()->OnEvent(&ev);
 			}
 			if (health <= 0) GetEntity()->toBeDestroyed = true;
 		}
 	}
 	void HealthComponent::LateUpdate(float dt)
 	{
-		if (GetEntity()->transform->position.x < 0) GetEntity()->toBeDestroyed = true;
+		if (GetEntity()->transform->position.x < 0 || GetEntity()->transform->position.x > 1024 
+			|| GetEntity()->transform->position.y < 0 || GetEntity()->transform->position.y > 800)
+			GetEntity()->toBeDestroyed = true;
 		if (currentDamageCD <= 0)return;
 		currentDamageCD -= dt;
 		if (currentDamageCD <= 0)
-			GetEntity()->OnEvent(new InvulnerabilityEvent(false, 0, 0));
+		{
+			InvulnerabilityEvent ev(false, 0, 0);
+			GetEntity()->OnEvent(&ev);
+		}
 	}
 	void ScriptComponent::Update(float dt)
 	{

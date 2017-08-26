@@ -8,7 +8,6 @@ namespace Engine
 			if (rec.first == event->GetName())
 				rec.second->OnEvent(event);
 		}
-		delete event;
 	}
 	void IEventDispatcher::RegisterReceiver(std::string name, IEventReceiver* rec)
 	{

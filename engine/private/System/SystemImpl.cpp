@@ -92,7 +92,8 @@ void SystemImpl::Start()
 		{
 			if (player->toBeDestroyed)
 			{
-				player->OnEvent(new EntityDestroyedEvent);
+				EntityDestroyedEvent ev;
+				player->OnEvent(&ev);
 				delete player;
 				player = nullptr;
 				continue;
